@@ -43,7 +43,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.isOpaque = false
         window.backgroundColor = NSColor.clear
         window.contentView = NSHostingView(rootView: contentView)
+        
+        window.alphaValue = 0
         window.makeKeyAndOrderFront(nil)
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.2
+            window.animator().alphaValue = 1
+        }
+        
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         
         if let button = statusItem.button {
@@ -75,11 +82,24 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     @objc func toggleWindow () {
-        if window.isVisible {
-            window.orderOut(nil)
+        // adding a quick fade so the window doesn't just "teleport" in; feels a bit more premium
+        if window.isVisible && window.alphaValue > 0 {
+            NSAnimationContext.runAnimationGroup({ context in
+                context.duration = 0.2
+                window.animator().alphaValue = 0
+            }, completionHandler: {
+                self.window.orderOut(nil)
+            })
         } else {
-            window.makeKeyAndOrderFront(nil)
+            if !window.isVisible {
+                window.alphaValue = 0
+                window.makeKeyAndOrderFront(nil)
+            }
             NSApp.activate(ignoringOtherApps: true)
+            NSAnimationContext.runAnimationGroup({ context in
+                context.duration = 0.2
+                window.animator().alphaValue = 1
+            }, completionHandler: nil)
         }
     }
     

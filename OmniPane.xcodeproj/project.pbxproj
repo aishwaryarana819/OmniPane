@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		2F2EAAB92F86942700BD9288 /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = 2F2EAAB82F86942700BD9288 /* KeyboardShortcuts */; };
+		8D1741832F8CDF02008EE08A /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = 8D1741822F8CDF02008EE08A /* KeyboardShortcuts */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -41,6 +42,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				2F2EAAB92F86942700BD9288 /* KeyboardShortcuts in Frameworks */,
+				8D1741832F8CDF02008EE08A /* KeyboardShortcuts in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -84,6 +86,7 @@
 			name = OmniPane;
 			packageProductDependencies = (
 				2F2EAAB82F86942700BD9288 /* KeyboardShortcuts */,
+				8D1741822F8CDF02008EE08A /* KeyboardShortcuts */,
 			);
 			productName = OmniPane;
 			productReference = 2F9380102F860E4C00F85565 /* OmniPane.app */;
@@ -114,7 +117,7 @@
 			mainGroup = 2F9380072F860E4C00F85565;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				2F2EAAB72F86942700BD9288 /* XCLocalSwiftPackageReference "../../../../../../aishwarya/Downloads/KeyboardShortcuts-2.4.0" */,
+				8D1741812F8CDF02008EE08A /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 2F9380112F860E4C00F85565 /* Products */;
@@ -356,16 +359,25 @@
 		};
 /* End XCConfigurationList section */
 
-/* Begin XCLocalSwiftPackageReference section */
-		2F2EAAB72F86942700BD9288 /* XCLocalSwiftPackageReference "../../../../../../aishwarya/Downloads/KeyboardShortcuts-2.4.0" */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = "../../../../../../aishwarya/Downloads/KeyboardShortcuts-2.4.0";
+/* Begin XCRemoteSwiftPackageReference section */
+		8D1741812F8CDF02008EE08A /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sindresorhus/KeyboardShortcuts";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.4.0;
+			};
 		};
-/* End XCLocalSwiftPackageReference section */
+/* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
 		2F2EAAB82F86942700BD9288 /* KeyboardShortcuts */ = {
 			isa = XCSwiftPackageProductDependency;
+			productName = KeyboardShortcuts;
+		};
+		8D1741822F8CDF02008EE08A /* KeyboardShortcuts */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8D1741812F8CDF02008EE08A /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */;
 			productName = KeyboardShortcuts;
 		};
 /* End XCSwiftPackageProductDependency section */

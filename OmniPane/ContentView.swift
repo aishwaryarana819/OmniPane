@@ -11,7 +11,7 @@ import UniformTypeIdentifiers
 enum AppUtility: String, CaseIterable, Identifiable {
     case fileDrop = "File Drop"
     case scratchNotes = "Scratch Notes"
-    var id: String {self.rawValue}
+    var id: String { self.rawValue }
 }
 
 struct ContentView: View {
@@ -23,30 +23,37 @@ struct ContentView: View {
 
     var body: some View {
         ZStack {
-            // AI Written gradient -- feeling lazy :\
-            LinearGradient(
-                gradient: Gradient(colors: [
-                    Color(red: 19/255, green: 63/255, blue: 15/255).opacity(1),
-                    Color(red: 7/255, green: 25/255, blue: 6/255).opacity(1)
-                ]),
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
+            Color.clear
+                .background(.ultraThinMaterial)
+                .ignoresSafeArea()
             
             ScrollView(.vertical, showsIndicators: true) {
                 VStack(spacing: 20) {
-                    ForEach(activeOrder) { utility in
+                    // Decided to go with physical reorder buttons here.
+                    // In my experience building Sigil, I've found that drag-and-drops in general
+                    // can be really finicky with mouse-tracking, so these feel
+                    // much more fluid.
+                    ForEach(activeOrder, id: \.self) { utility in
+                        let index = activeOrder.firstIndex(of: utility) ?? 0
+                        let isFirst = index == 0
+                        let isLast = index == activeOrder.count - 1
+                        
                         if utility == .fileDrop && showFileDrop {
-                            UtilityWrapper(item: utility, list: $activeOrder) {
-                                FileDropView()
-                                    .padding(.top, 5)
-                            }
+                            FileDropView(
+                                onMoveUp: { moveUp(index) },
+                                onMoveDown: { moveDown(index) },
+                                isFirst: isFirst,
+                                isLast: isLast
+                            )
+                            .padding(.top, 5)
                         } else if utility == .scratchNotes && showScratchNotes {
-                            UtilityWrapper(item: utility, list: $activeOrder) {
-                                ScratchNotesView()
-                                    .padding(.top, 5)
-                            }
+                            ScratchNotesView(
+                                onMoveUp: { moveUp(index) },
+                                onMoveDown: { moveDown(index) },
+                                isFirst: isFirst,
+                                isLast: isLast
+                            )
+                            .padding(.top, 5)
                         }
                     }
                 }
@@ -55,17 +62,27 @@ struct ContentView: View {
             }
         }
         .frame(minWidth: 300, maxWidth: 700, minHeight: 400)
-//        .navigationTitle("OmniPane").font(.headline).foregroundStyle(Color.white.opacity(0.8))
-        .onAppear {loadOrder()}
-        .onChange(of: activeOrder) {_ in saveOrder()}
+        .onAppear { loadOrder() }
+        .onChange(of: activeOrder) { _ in saveOrder() }
+    }
+    
+    private func moveUp(_ index: Int) {
+        guard index > 0 else { return }
+        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+            activeOrder.swapAt(index, index - 1)
+        }
+    }
+    
+    private func moveDown(_ index: Int) {
+        guard index < activeOrder.count - 1 else { return }
+        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+            activeOrder.swapAt(index, index + 1)
+        }
     }
     
     private func loadOrder() {
         let saved = orderString.components(separatedBy: ",")
-        
-        activeOrder = saved.compactMap {
-            AppUtility(rawValue: $0)
-        }
+        activeOrder = saved.compactMap { AppUtility(rawValue: $0) }
         
         for utility in AppUtility.allCases {
             if !activeOrder.contains(utility) {
@@ -73,130 +90,37 @@ struct ContentView: View {
             }
         }
     }
+    
     private func saveOrder() {
-        orderString = activeOrder.map {$0.rawValue}.joined(separator: ",")
+        orderString = activeOrder.map { $0.rawValue }.joined(separator: ",")
     }
 }
 
-struct UtilityWrapper<Content: View>: View {
-    let item: AppUtility
-    @Binding var list: [AppUtility]
-    
-    //    @State private var isHovering = false
-    
-    let content: Content
-    
-    init(item: AppUtility,
-         list: Binding <[AppUtility]>,
-         @ViewBuilder content: () -> Content
-    ) {
-        self.item = item
-        self._list = list
-        self.content = content()
-    }
+struct ReorderButtons: View {
+    let onMoveUp: () -> Void
+    let onMoveDown: () -> Void
+    let isFirst: Bool
+    let isLast: Bool
     
     var body: some View {
-        content
-            .dropDestination(for: String.self) {
-                items, location in
-                guard let firstItem = items.first,
-                      let draggedUtility = AppUtility(rawValue: firstItem),
-                      draggedUtility != item,
-                      let fromIndex = list.firstIndex(of: draggedUtility),
-                      let toIndex = list.firstIndex(of: item) else {return false}
-                
-                withAnimation(.default) {
-                    list.move(fromOffsets: IndexSet(integer: fromIndex),
-                              toOffset: toIndex > fromIndex ? toIndex + 1 : toIndex)
-                }
-                return true
+        HStack(spacing: 8) {
+            Button(action: onMoveUp) {
+                Image(systemName: "chevron.up")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(isFirst ? .white.opacity(0.2) : .white.opacity(0.8))
             }
-        
-        //        ZStack(alignment: .topTrailing) {
-        //            content
-        //            SixDotDragHandle()
-        //                .opacity(isHovering ? 1.0 : 0.0)
-        //                .padding(.top, 12)
-        //                .padding(.leading, 8)
-        //                .onDrag {
-        //                    return NSItemProvider(object: item.rawValue as NSString)
-        //                } preview: {
-        //                    content.frame(width: 300)
-        //                }
-        //        }
-        //        .onHover { hovering in
-        //            withAnimation(.easeInOut(duration: 0.2)) {
-        //                isHovering = hovering
-        //            }
-        //        }
-        //        .onDrop(of: [.plainText], delegate:
-        //            ReorderDelegate(item: item, list: $list))
-        //    }
-    }
-    
-    struct ReorderDelegate: DropDelegate {
-        let item: AppUtility
-        @Binding var list: [AppUtility]
-        
-        func dropEntered(info: DropInfo) {
-            guard info.hasItemsConforming(to: [.plainText])
-            else { return }
+            .disabled(isFirst)
+            .buttonStyle(PlainButtonStyle())
             
-            let draggedItem = info.itemProviders(for: [.plainText]).first
-            draggedItem?.loadItem(forTypeIdentifier: "public.plain-text", options: nil) { (data, error) in
-                if let data = data as? Data, let draggedString = String(data: data, encoding: .utf8) {
-                    DispatchQueue.main.async {
-                        guard let draggedUtility = AppUtility(rawValue: draggedString),
-                              draggedUtility != item,
-                              let fromIndex = list.firstIndex(of: draggedUtility),
-                              let toIndex = list.firstIndex(of: item) else {return}
-                        
-                        withAnimation(.default) {
-                            list.move(fromOffsets: IndexSet(integer: fromIndex),
-                                      toOffset: toIndex > fromIndex ? toIndex + 1 : toIndex)
-                        }
-                    }
-                }
+            Button(action: onMoveDown) {
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(isLast ? .white.opacity(0.2) : .white.opacity(0.8))
             }
+            .disabled(isLast)
+            .buttonStyle(PlainButtonStyle())
         }
-        
-        func dropUpdated(info: DropInfo) -> DropProposal? {
-            return DropProposal(operation: .move)
-        }
-        
-        func performDrop(info: DropInfo) -> Bool {
-            return true
-        }
+        .padding(.trailing, 5)
+        .padding(.leading, 5)
     }
 }
- 
-struct SixDotDragHandle: View {
-        var rawItemName: String
-        
-        var body: some View {
-            HStack(spacing: 3) {
-                VStack(spacing: 3) {
-                    Circle().frame(width: 3, height: 3)
-                    Circle().frame(width: 3, height: 3)
-                    Circle().frame(width: 3, height: 3)
-                }
-                VStack(spacing: 3) {
-                    Circle().frame(width: 3, height: 3)
-                    Circle().frame(width: 3, height: 3)
-                    Circle().frame(width: 3, height: 3)
-                }
-            }
-            .foregroundColor(.white.opacity(0.5))
-            .padding(10)
-            .contentShape(Rectangle())
-            .draggable(rawItemName)
-            .onHover { hover in
-                if hover {
-                    NSCursor.openHand.push()
-                } else {
-                    NSCursor.pop()
-                }
-            }
-        }
-    }
-
